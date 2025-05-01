@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swiggy Clone</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="text-2xl font-bold text-indigo-600">SwiggyClone</div>
+      <div class="flex-1 mx-6">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search for restaurants or dishes"
+          class="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+      <div class="flex items-center space-x-6 text-gray-600">
+        <button aria-label="User Account" class="hover:text-indigo-600">
+          <i class="fas fa-user fa-lg"></i>
+        </button>
+        <button aria-label="Cart" id="cartButton" class="hover:text-indigo-600 relative">
+          <i class="fas fa-shopping-cart fa-lg"></i>
+          <span
+            id="cartCount"
+            class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5"
+            >0</span
+          >
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8 flex-1">
+    <h1 class="text-3xl font-semibold mb-6 text-gray-800">Popular Restaurants</h1>
+    <div id="restaurantGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Restaurant Cards will be rendered here by JS -->
+    </div>
+  </main>
+
+  <!-- Menu Modal -->
+  <div
+    id="menuModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+    aria-hidden="true"
+  >
+    <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto p-6 relative">
+      <button
+        id="closeMenuModal"
+        class="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+        aria-label="Close menu"
+      >
+        <i class="fas fa-times fa-lg"></i>
+      </button>
+      <h2 id="menuModalTitle" class="text-2xl font-semibold mb-4"></h2>
+      <div id="menuItems" class="space-y-4">
+        <!-- Menu items will be rendered here -->
+      </div>
+      <button
+        id="addToCartButton"
+        class="mt-6 w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50"
+        disabled
+      >
+        Add to Cart
+      </button>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div
+    id="cartModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+    aria-hidden="true"
+  >
+    <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 relative">
+      <button
+        id="closeCartModal"
+        class="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+        aria-label="Close cart"
+      >
+        <i class="fas fa-times fa-lg"></i>
+      </button>
+      <h2 class="text-2xl font-semibold mb-4">Your Cart</h2>
+      <div id="cartItems" class="space-y-4">
+        <!-- Cart items will be rendered here -->
+      </div>
+      <div class="mt-6 flex justify-between items-center font-semibold text-lg">
+        <span>Total:</span>
+        <span id="cartTotal">₹0</span>
+      </div>
+      <button
+        id="checkoutButton"
+        class="mt-6 w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+        disabled
+      >
+        Checkout
+      </button>
+    </div>
+  </div>
+
+  <footer class="bg-white shadow-inner mt-auto">
+    <div class="container mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+      &copy; 2024 SwiggyClone. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Data for restaurants and menus
+    const restaurants = [
+      {
+        id: 1,
+        name: "The Spice House",
+        cuisine: "Indian, North Indian",
+        priceForTwo: 300,
+        image:
+          "https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200",
+        menu: [
+          { id: 101, name: "Butter Chicken", price: 250 },
+          { id: 102, name: "Paneer Tikka", price: 200 },
+          { id: 103, name: "Naan", price: 50 },
+        ],
+      },
+      {
+        id: 2,
+        name: "Pasta Paradise",
+        cuisine: "Italian, Continental",
+        priceForTwo: 450,
+        image:
+          "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200",
+        menu: [
+          { id: 201, name: "Spaghetti Carbonara", price: 350 },
+          { id: 202, name: "Garlic Bread", price: 150 },
+          { id: 203, name: "Tiramisu", price: 200 },
+        ],
+      },
+      {
+        id: 3,
+        name: "Sushi World",
+        cuisine: "Japanese, Sushi",
+        priceForTwo: 600,
+        image:
+          "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200",
+        menu: [
+          { id: 301, name: "California Roll", price: 400 },
+          { id: 302, name: "Miso Soup", price: 150 },
+          { id: 303, name: "Tempura", price: 300 },
+        ],
+      },
+      {
+        id: 4,
+        name: "Burger Hub",
+        cuisine: "Fast Food, American",
+        priceForTwo: 250,
+        image:
+          "https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200",
+        menu: [
+          { id: 401, name: "Cheeseburger", price: 200 },
+          { id: 402, name: "Fries", price: 100 },
+          { id: 403, name: "Milkshake", price: 150 },
+        ],
+      },
+    ];
+
+    // State
+    let cart = [];
+    let selectedMenuItems = new Set();
+
+    // DOM Elements
+    const restaurantGrid = document.getElementById("restaurantGrid");
+    const menuModal = document.getElementById("menuModal");
+    const menuModalTitle = document.getElementById("menuModalTitle");
+    const menuItemsContainer = document.getElementById("menuItems");
+    const addToCartButton = document.getElementById("addToCartButton");
+    const closeMenuModalButton = document.getElementById("closeMenuModal");
+    const cartButton = document.getElementById("cartButton");
+    const cartModal = document.getElementById("cartModal");
+    const closeCartModalButton = document.getElementById("closeCartModal");
+    const cartItemsContainer = document.getElementById("cartItems");
+    const cartCount = document.getElementById("cartCount");
+    const cartTotal = document.getElementById("cartTotal");
+    const checkoutButton = document.getElementById("checkoutButton");
+    const searchInput = document.getElementById("searchInput");
+
+    // Render restaurants
+    function renderRestaurants(filter = "") {
+      restaurantGrid.innerHTML = "";
+      const filteredRestaurants = restaurants.filter((r) => {
+        const searchText = filter.toLowerCase();
+        return (
+          r.name.toLowerCase().includes(searchText) ||
+          r.cuisine.toLowerCase().includes(searchText)
+        );
+      });
+      filteredRestaurants.forEach((restaurant) => {
+        const card = document.createElement("div");
+        card.className =
+          "bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300";
+        card.innerHTML = `
+          <img
+            src="${restaurant.image}"
+            alt="${restaurant.name}"
+            class="w-full h-40 object-cover"
+          />
+          <div class="p-4">
+            <h2 class="text-xl font-semibold text-gray-900">${restaurant.name}</h2>
+            <p class="text-gray-600 text-sm mt-1">${restaurant.cuisine}</p>
+            <p class="text-indigo-600 font-semibold mt-2">₹${restaurant.priceForTwo} for two</p>
+            <button
+              class="mt-4 w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors"
+              data-restaurant-id="${restaurant.id}"
+            >
+              View Menu
+            </button>
+          </div>
+        `;
+        restaurantGrid.appendChild(card);
+      });
+    }
+
+    // Open menu modal
+    function openMenuModal(restaurantId) {
+      const restaurant = restaurants.find((r) => r.id === restaurantId);
+      if (!restaurant) return;
+      menuModalTitle.textContent = restaurant.name + " Menu";
+      menuItemsContainer.innerHTML = "";
+      selectedMenuItems.clear();
+
+      restaurant.menu.forEach((item) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "flex items-center justify-between";
+        itemDiv.innerHTML = `
+          <label class="flex items-center space-x-3 cursor-pointer">
+            <input type="checkbox" class="menu-item-checkbox" data-item-id="${item.id}" />
+            <span>${item.name}</span>
+          </label>
+          <span class="font-semibold">₹${item.price}</span>
+        `;
+        menuItemsContainer.appendChild(itemDiv);
+      });
+
+      addToCartButton.disabled = true;
+      menuModal.classList.remove("hidden");
+      menuModal.setAttribute("aria-hidden", "false");
+    }
+
+    // Close menu modal
+    function closeMenuModal() {
+      menuModal.classList.add("hidden");
+      menuModal.setAttribute("aria-hidden", "true");
+    }
+
+    // Update add to cart button state
+    function updateAddToCartButton() {
+      addToCartButton.disabled = selectedMenuItems.size === 0;
+    }
+
+    // Add selected menu items to cart
+    function addToCart() {
+      selectedMenuItems.forEach((itemId) => {
+        const restaurant = restaurants.find((r) =>
+          r.menu.some((item) => item.id === itemId)
+        );
+        if (!restaurant) return;
+        const menuItem = restaurant.menu.find((item) => item.id === itemId);
+        if (!menuItem) return;
+
+        const existingCartItem = cart.find((c) => c.id === itemId);
+        if (existingCartItem) {
+          existingCartItem.quantity++;
+        } else {
+          cart.push({ ...menuItem, quantity: 1 });
+        }
+      });
+      updateCartCount();
+      closeMenuModal();
+      renderCartItems();
+    }
+
+    // Render cart items
+    function renderCartItems() {
+      cartItemsContainer.innerHTML = "";
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = "<p>Your cart is empty.</p>";
+        checkoutButton.disabled = true;
+        cartTotal.textContent = "₹0";
+        return;
+      }
+      checkoutButton.disabled = false;
+      let total = 0;
+      cart.forEach((item) => {
+        total += item.price * item.quantity;
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "flex items-center justify-between";
+        itemDiv.innerHTML = `
+          <div class="flex items-center space-x-4">
+            <span>${item.name}</span>
+            <button class="text-red-600 hover:text-red-800 font-bold" data-action="decrease" data-item-id="${item.id}">-</button>
+            <span>${item.quantity}</span>
+            <button class="text-green-600 hover:text-green-800 font-bold" data-action="increase" data-item-id="${item.id}">+</button>
+          </div>
+          <span>₹${item.price * item.quantity}</span>
+        `;
+        cartItemsContainer.appendChild(itemDiv);
+      });
+      cartTotal.textContent = `₹${total}`;
+    }
+
+    // Update cart count badge
+    function updateCartCount() {
+      const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+      cartCount.textContent = count;
+    }
+
+    // Handle cart item quantity change
+    function handleCartItemChange(itemId, action) {
+      const cartItem = cart.find((c) => c.id === itemId);
+      if (!cartItem) return;
+      if (action === "increase") {
+        cartItem.quantity++;
+      } else if (action === "decrease") {
+        cartItem.quantity--;
+        if (cartItem.quantity <= 0) {
+          cart = cart.filter((c) => c.id !== itemId);
+        }
+      }
+      updateCartCount();
+      renderCartItems();
+    }
+
+    // Event listeners
+    document.addEventListener("click", (e) => {
+      // View Menu button
+      if (e.target.matches("button[data-restaurant-id]")) {
+        const restaurantId = parseInt(e.target.getAttribute("data-restaurant-id"));
+        openMenuModal(restaurantId);
+      }
+
+      // Close menu modal
+      if (e.target === closeMenuModalButton || e.target.closest("#closeMenuModal")) {
+        closeMenuModal();
+      }
+
+      // Menu item checkbox change
+      if (e.target.classList.contains("menu-item-checkbox")) {
+        const itemId = parseInt(e.target.getAttribute("data-item-id"));
+        if (e.target.checked) {
+          selectedMenuItems.add(itemId);
+        } else {
+          selectedMenuItems.delete(itemId);
+        }
+        updateAddToCartButton();
+      }
+
+      // Add to Cart button
+      if (e.target === addToCartButton) {
+        addToCart();
+      }
+
+      // Cart button
+      if (e.target === cartButton || e.target.closest("#cartButton")) {
+        cartModal.classList.remove("hidden");
+        cartModal.setAttribute("aria-hidden", "false");
+        renderCartItems();
+      }
+
+      // Close cart modal
+      if (e.target === closeCartModalButton || e.target.closest("#closeCartModal")) {
+        cartModal.classList.add("hidden");
+        cartModal.setAttribute("aria-hidden", "true");
+      }
+
+      // Cart item quantity buttons
+      if (e.target.dataset.action && e.target.dataset.itemId) {
+        const itemId = parseInt(e.target.dataset.itemId);
+        const action = e.target.dataset.action;
+        handleCartItemChange(itemId, action);
+      }
+
+      // Checkout button
+      if (e.target === checkoutButton) {
+        alert("Thank you for your order!");
+        cart = [];
+        updateCartCount();
+        renderCartItems();
+        cartModal.classList.add("hidden");
+        cartModal.setAttribute("aria-hidden", "true");
+      }
+    });
+
+    // Search input
+    searchInput.addEventListener("input", (e) => {
+      renderRestaurants(e.target.value);
+    });
+
+    // Initial render
+    renderRestaurants();
+    updateCartCount();
+  </script>
+</body>
+</html>
